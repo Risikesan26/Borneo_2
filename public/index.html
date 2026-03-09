@@ -668,6 +668,35 @@
   .car-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
   .car-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.08); }
 
+  /* AI recommendation badge on car cards */
+  .ai-reco-badge {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    background: var(--green);
+    color: #000;
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.75rem;
+    display: flex; align-items: center; gap: 0.35rem;
+    z-index: 2;
+  }
+  .ai-reco-rank {
+    background: rgba(0,0,0,0.2);
+    padding: 0.05rem 0.35rem;
+    border-radius: 2px;
+    font-size: 0.55rem;
+  }
+  .car-card.ai-recommended {
+    border: 2px solid var(--green) !important;
+    background: #0a1a0f;
+  }
+  .car-card.ai-recommended .car-img-wrap {
+    margin-top: 24px;
+  }
+
   /* ======================================
      PAGE 4: TRUE COST
   ====================================== */
@@ -1351,7 +1380,21 @@
     <div class="page-header">
       <div class="page-num">Step 03 of 06</div>
       <h1 class="page-title">Select Your Car</h1>
-      <p class="page-desc">Browse Malaysian market options and select the vehicle you're considering. We'll calculate its true cost against your budget.</p>
+      <p class="page-desc">Browse Malaysian market options. Cars marked <span style="color:var(--green);font-weight:600">AI Recommended</span> are financially suited to your profile.</p>
+    </div>
+
+    <!-- AI Recommendation banner -->
+    <div id="ai-reco-banner" style="margin-top:1.25rem;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--green);padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <div class="ai-pulse"></div>
+        <div>
+          <div style="font-family:var(--mono);font-size:0.65rem;letter-spacing:0.08em;color:var(--green)">AI RECOMMENDATION ENGINE</div>
+          <div id="reco-banner-text" style="font-size:0.82rem;color:var(--text-dim);margin-top:0.15rem">Complete Step 2 first, then click to get AI-suggested cars highlighted on the grid below.</div>
+        </div>
+      </div>
+      <button class="btn-secondary" id="btn-reco-p3" onclick="runRecommendationsP3()" style="padding:0.5rem 1rem;font-size:0.68rem;white-space:nowrap;border-color:var(--green);color:var(--green)">
+        ✦ Get AI Picks
+      </button>
     </div>
   </div>
 
@@ -1584,11 +1627,9 @@
     <div style="margin-top:2rem">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1rem">
         <div class="label">AI Financial Analysis</div>
-        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
-          <button class="btn-primary" id="btn-analyze" onclick="runFullAnalysis()" style="padding:0.6rem 1.2rem;font-size:0.68rem">
-            ⚡ Generate Analysis
-          </button>
-        </div>
+        <button class="btn-primary" id="btn-analyze" onclick="runFullAnalysis()" style="padding:0.6rem 1.2rem;font-size:0.68rem">
+          ⚡ Generate Analysis
+        </button>
       </div>
 
       <!-- Analysis output panel -->
@@ -1597,7 +1638,7 @@
           <div style="font-size:2rem">🤖</div>
           <div>
             <div style="font-family:var(--mono);font-size:0.75rem;color:var(--text-dim)">Waiting for analysis...</div>
-            <div style="font-size:0.78rem;color:var(--text-faint);margin-top:0.25rem">Enter your Groq API key and click Generate Analysis to get your personalised financial report.</div>
+            <div style="font-size:0.78rem;color:var(--text-faint);margin-top:0.25rem">Complete Steps 2 & 3, then click Generate Analysis to get your personalised financial report.</div>
           </div>
         </div>
         <div id="analysis-loading" style="display:none;align-items:center;gap:0.75rem">
@@ -1698,7 +1739,9 @@ const state = {
   stability: 'medium',
   selectedCar: null,
   budget: 0,
-  dti: 0
+  dti: 0,
+  aiRecoIds: [],       // car IDs the AI recommends, ordered by rank
+  aiRecoReasons: {}    // { carId: 'reason string' }
 };
 
 // ============================================================
@@ -1746,8 +1789,30 @@ function renderCars() {
   const filtered = filteredCars;
   document.getElementById('car-count').textContent = filtered.length;
 
-  grid.innerHTML = filtered.map(c => `
-    <div class="car-card ${state.selectedCar && state.selectedCar.id === c.id ? 'selected' : ''}" id="car-${c.id}" onclick="selectCar(${c.id})">
+  // Sort: AI recommended first, then rest
+  const sorted = [...filtered].sort((a, b) => {
+    const aRank = state.aiRecoIds.indexOf(a.id);
+    const bRank = state.aiRecoIds.indexOf(b.id);
+    if (aRank !== -1 && bRank !== -1) return aRank - bRank;
+    if (aRank !== -1) return -1;
+    if (bRank !== -1) return 1;
+    return 0;
+  });
+
+  const rankLabels = ['BEST MATCH', 'RUNNER UP', 'ALSO CONSIDER'];
+
+  grid.innerHTML = sorted.map(c => {
+    const recoIndex = state.aiRecoIds.indexOf(c.id);
+    const isReco = recoIndex !== -1;
+    const isSelected = state.selectedCar && state.selectedCar.id === c.id;
+
+    return `
+    <div class="car-card ${isSelected ? 'selected' : ''} ${isReco ? 'ai-recommended' : ''}" id="car-${c.id}" onclick="selectCar(${c.id})">
+      ${isReco ? `
+        <div class="ai-reco-badge">
+          ✦ AI Recommended
+          <span class="ai-reco-rank">${rankLabels[recoIndex] || ''}</span>
+        </div>` : ''}
       <div class="car-img-wrap">${c.emoji}</div>
       <div class="car-info">
         <div class="car-name">${c.brand} ${c.model}</div>
@@ -1757,14 +1822,18 @@ function renderCars() {
           <span>${c.specs}</span>
           ${c.mileage ? `<span>📍 ${c.mileage}</span>` : ''}
         </div>
+        ${isReco && state.aiRecoReasons[c.id] ? `
+          <div style="margin-top:0.6rem;padding:0.5rem 0.6rem;background:rgba(76,175,125,0.08);border-left:2px solid var(--green);font-size:0.72rem;color:var(--text-dim);line-height:1.4">
+            ${state.aiRecoReasons[c.id]}
+          </div>` : ''}
       </div>
       <div class="car-actions">
-        <button class="car-btn ${state.selectedCar && state.selectedCar.id === c.id ? 'active' : ''}" onclick="event.stopPropagation();selectCar(${c.id})">
-          ${state.selectedCar && state.selectedCar.id === c.id ? '✓ Selected' : 'Select This Car'}
+        <button class="car-btn ${isSelected ? 'active' : ''}" onclick="event.stopPropagation();selectCar(${c.id})">
+          ${isSelected ? '✓ Selected' : 'Select This Car'}
         </button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function selectCar(id) {
@@ -1787,6 +1856,66 @@ function filterCars() {
     return true;
   });
   renderCars();
+}
+
+// ============================================================
+// AI RECOMMENDATIONS FOR PAGE 3
+// ============================================================
+async function runRecommendationsP3() {
+  if (!state.salary) {
+    alert('Please complete your financial profile in Step 2 first.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-reco-p3');
+  const bannerText = document.getElementById('reco-banner-text');
+  btn.disabled = true;
+  btn.textContent = 'Finding picks...';
+  bannerText.textContent = 'AI is analysing your profile and matching cars...';
+
+  // Build car list context for AI
+  const carListContext = cars.map(c =>
+    `ID:${c.id} | ${c.brand} ${c.model} (${c.year}, ${c.type}) | RM${c.price.toLocaleString()} | ${c.specs}`
+  ).join('\n');
+
+  const prompt = `${buildSystemPrompt()}
+
+Here are the available cars in our system:
+${carListContext}
+
+Based on the user's financial profile, recommend the 3 most financially suitable cars from the list above.
+You MUST only recommend cars from this exact list using their ID numbers.
+
+Respond ONLY with a JSON array (no markdown, no backticks, no explanation):
+[
+  { "id": 2, "reason": "Short reason why this car suits the user financially (max 15 words)" },
+  { "id": 1, "reason": "Short reason" },
+  { "id": 4, "reason": "Short reason" }
+]`;
+
+  try {
+    const raw = await callGroq([{ role: 'user', content: prompt }], 400);
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const recs = JSON.parse(clean);
+
+    // Store AI recommendations in state
+    state.aiRecoIds = recs.map(r => r.id);
+    state.aiRecoReasons = {};
+    recs.forEach(r => { state.aiRecoReasons[r.id] = r.reason; });
+
+    // Re-render cars with badges
+    renderCars();
+
+    const topCar = cars.find(c => c.id === state.aiRecoIds[0]);
+    bannerText.innerHTML = `✦ AI found <strong style="color:var(--green)">${recs.length} recommended cars</strong> for your profile. They're sorted to the top and highlighted below.${topCar ? ` Top pick: <strong style="color:var(--text)">${topCar.brand} ${topCar.model}</strong>.` : ''}`;
+    btn.textContent = '↺ Refresh Picks';
+
+  } catch (err) {
+    bannerText.innerHTML = `<span style="color:var(--red)">Could not get AI recommendations: ${err.message}</span>`;
+    btn.textContent = '✦ Get AI Picks';
+  }
+
+  btn.disabled = false;
 }
 
 // ============================================================
@@ -2056,9 +2185,8 @@ function buildInsights() {
 }
 
 // ============================================================
-// GROQ HELPER
+// GROQ HELPER — calls backend /api/chat (key stored in .env)
 // ============================================================
-
 async function callGroq(messages, maxTokens = 1000) {
   const response = await fetch('/api/chat', {
     method: 'POST',
@@ -2069,6 +2197,10 @@ async function callGroq(messages, maxTokens = 1000) {
       messages
     })
   });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error('API error: ' + text.slice(0, 120));
+  }
   const data = await response.json();
   if (data.error) throw new Error(data.error.message);
   return data.choices?.[0]?.message?.content || '';
@@ -2114,11 +2246,6 @@ Malaysian financial context: Recommended car cost is max 15–20% of monthly inc
 // FEATURE 1: AUTO FINANCIAL ANALYSIS
 // ============================================================
 async function runFullAnalysis() {
-  const groqKey = document.getElementById('groq-key').value.trim();
-  if (!groqKey) {
-    alert('Please enter your Groq API key first.');
-    return;
-  }
   if (!state.salary) {
     alert('Please complete your financial profile in Step 2 first.');
     return;
@@ -2198,7 +2325,7 @@ Analyse this car purchase decision and respond ONLY with a JSON object (no markd
     document.getElementById('analysis-placeholder').style.display = 'flex';
     document.getElementById('analysis-placeholder').innerHTML = `
       <div style="font-size:1.5rem">⚠️</div>
-      <div style="font-size:0.82rem;color:var(--red)">${err.message === 'NO_KEY' ? 'Please enter your Groq API key.' : 'Error: ' + err.message}</div>
+      <div style="font-size:0.82rem;color:var(--red)">Error: ${err.message}</div>
     `;
   }
 
@@ -2210,8 +2337,6 @@ Analyse this car purchase decision and respond ONLY with a JSON object (no markd
 // FEATURE 2: AI CAR RECOMMENDATION ENGINE
 // ============================================================
 async function runRecommendations() {
-  const groqKey = document.getElementById('groq-key').value.trim();
-  if (!groqKey) { alert('Please enter your Groq API key first.'); return; }
   if (!state.salary) { alert('Please complete your financial profile in Step 2 first.'); return; }
 
   const btn = document.getElementById('btn-recommend');
@@ -2299,7 +2424,7 @@ Respond ONLY with a JSON array (no markdown, no backticks):
     document.getElementById('reco-placeholder').style.display = 'flex';
     document.getElementById('reco-placeholder').innerHTML = `
       <div style="font-size:1.5rem">⚠️</div>
-      <div style="font-size:0.82rem;color:var(--red)">${err.message === 'NO_KEY' ? 'Please enter your Groq API key.' : 'Error: ' + err.message}</div>
+      <div style="font-size:0.82rem;color:var(--red)">Error: ${err.message}</div>
     `;
   }
 
@@ -2343,7 +2468,7 @@ async function sendAI() {
     appendMsg('ai', text);
   } catch (err) {
     document.getElementById(typingId)?.remove();
-    appendMsg('ai', err.message === 'NO_KEY' ? '⚠️ Please enter your Groq API key.' : 'Connection error: ' + err.message);
+    appendMsg('ai', 'Connection error: ' + err.message);
   }
 
   btn.disabled = false;
