@@ -1078,7 +1078,7 @@ async function runRecommendationsP3() {
   btn.disabled = true; btn.textContent = 'Finding picks...';
   bannerText.textContent = 'AI is analysing your profile and matching cars...';
   // Send first 40 filtered cars (or all if fewer) for AI to pick from
-  const carsForAI = filteredCars.slice(0, 40);
+  const carsForAI = filteredCars.slice(0, 200);
   const carListContext = carsForAI.map(c=>`ID:${c.id} | ${c.make} ${c.model} ${c.variant} (${c.year}, ${c.condition}) | RM${c.price.toLocaleString()} | ${c.engine} ${c.transmission} ${c.bodyType} | ${c.mileage||'New'}`).join('\n');
   const prompt = `${buildSystemPrompt()}\n\nHere are the available cars:\n${carListContext}\n\nRecommend the 3 most financially suitable cars. Respond ONLY with JSON array (no markdown):\n[{"id":2,"reason":"Short reason max 15 words"},{"id":1,"reason":"Short reason"},{"id":4,"reason":"Short reason"}]`;
   try {
@@ -1473,7 +1473,7 @@ function buildSystemPrompt() {
   const trackBStr = state.trackBCar
     ? `Track B alternative: ${state.trackBCar.make} ${state.trackBCar.model} (${state.trackBCar.year}, ${state.trackBCar.condition}) at RM${state.trackBCar.price.toLocaleString()}`
     : 'Track B: estimated at 65% of selected car price';
-  return `You are TrueCost AI, a Malaysian personal finance advisor specialising in car affordability. Speak clearly and directly.\n\nUSER FINANCIAL PROFILE:\n- Salary: RM${state.salary.toLocaleString()}/month\n- Existing loans: RM${state.loans.toLocaleString()}/month\n- Living expenses: RM${state.expenses.toLocaleString()}/month\n- Savings: RM${state.savings.toLocaleString()}\n- Emergency fund: RM${state.emergency.toLocaleString()}\n- Age: ${state.age} | Dependents: ${state.dependents} | Stability: ${state.stability}\n- DTI: ${state.dti.toFixed(1)}%\n- Loan term: ${state.loanTermYears||7} years\n${car ? `\nSELECTED CAR (Track A):\n- ${carName}\n- Price: RM${car.price.toLocaleString()} | Engine: ${car.engine||car.engineCC+'cc'} | Body: ${car.bodyType}\n- True monthly cost: RM${tc?Math.round(tc.total).toLocaleString():'?'} (${pct}% of income)\n- 5-year total: RM${tc?Math.round(tc.total5yr).toLocaleString():'?'}\n- ${trackBStr}` : 'No car selected.'}\n\nMalaysian context: max 15–20% of income on car, DTI under 30%, 6 months emergency fund.`;
+  return `You are TrueCost AI, a Malaysian personal finance advisor specialising in car affordability. Speak clearly and directly.\n\nUSER FINANCIAL PROFILE:\n- Salary: RM${state.salary.toLocaleString()}/month\n- Existing loans: RM${state.loans.toLocaleString()}/month\n- Living expenses: RM${state.expenses.toLocaleString()}/month\n- Savings: RM${state.savings.toLocaleString()}\n- Emergency fund: RM${state.emergency.toLocaleString()}\n- Age: ${state.age} | Dependents: ${state.dependents} | Stability: ${state.stability}\n- DTI: ${state.dti.toFixed(1)}%\n- Loan term: ${state.loanTermYears||7} years\n${car ? `\nSELECTED CAR (Track A):\n- ${carName}\n- Price: RM${car.price.toLocaleString()} | Engine: ${car.engine||car.engineCC+'cc'} | Body: ${car.bodyType}\n- True monthly cost: RM${tc?Math.round(tc.total).toLocaleString():'?'} (${pct}% of income)\n- 5-year total: RM${tc?Math.round(tc.total5yr).toLocaleString():'?'}\n- ${trackBStr}` : 'No car selected.'}\n\nMalaysian context: max 20–30% of income on car, DTI under 30%, 6 months emergency fund.`;
 }
 
 // ============================================================
