@@ -600,15 +600,15 @@
   <div class="container">
     <div class="page-header">
       <div class="page-num">Step 05 of 06</div>
-      <h1 class="page-title">Wealth Gap Analysis</h1>
-      <p class="page-desc">Two paths, one decision. See exactly how much wealth you build — or sacrifice — depending on which car you choose.</p>
+      <h1 class="page-title" id="p5-title">Wealth Gap Analysis</h1>
+      <p class="page-desc" id="p5-desc">Two paths, one decision. See exactly how much wealth you build — or sacrifice — depending on which car you choose.</p>
     </div>
 
     <!-- Summary stats -->
     <div class="wc-stats" style="margin-top:2rem">
       <div class="wc-stat">
         <div class="wc-stat-icon">🔢</div>
-        <div class="wc-stat-label">Monthly Saving (Used vs New)</div>
+        <div class="wc-stat-label" id="wc-stat1-label">Monthly Saving (Used vs New)</div>
         <div class="wc-stat-val" id="wc-monthly-saving" style="color:#c9a84c">RM —</div>
       </div>
       <div class="wc-stat">
@@ -648,7 +648,7 @@
             <div style="width:20px;height:2px;background:#3a3a3a;border-radius:2px"></div> Track A — New Car (RM 0 invested)
           </div>
           <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:0.65rem;color:var(--text-faint)">
-            <div style="width:20px;height:3px;background:#4caf7d;border-radius:2px"></div> Track B — Pre-owned (savings invested at 7% p.a.)
+            <div style="width:20px;height:3px;background:#4caf7d;border-radius:2px"></div> <span id="wc-legend-b">Track B — Pre-owned (savings invested at 7% p.a.)</span>
           </div>
         </div>
       </div>
@@ -681,10 +681,10 @@
           <div class="wc-track-outcome" style="color:#e05252" id="wc-a-outcome">RM 0 portfolio after selected horizon</div>
         </div>
         <div class="wc-track wc-track-b">
-          <div class="wc-track-label" style="color:#4caf7d">Track B — Pre-owned (~65% of new price)</div>
+          <div class="wc-track-label" style="color:#4caf7d" id="wc-b-label">Track B — Pre-owned (~65% of new price)</div>
           <div class="wc-track-emi" id="wc-b-emi" style="color:#4caf7d">RM —</div>
-          <div class="wc-track-sub">/month lower total cost</div>
-          <div style="font-family:var(--mono);font-size:0.65rem;color:var(--text-faint)">Monthly saving invested</div>
+          <div class="wc-track-sub" id="wc-b-sub">/month lower total cost</div>
+          <div style="font-family:var(--mono);font-size:0.65rem;color:var(--text-faint)" id="wc-b-invest-label">Monthly saving invested</div>
           <div class="wc-track-outcome" style="color:#c9a84c" id="wc-b-outcome">RM — portfolio value</div>
         </div>
       </div>
@@ -707,10 +707,10 @@
         </div>
         <!-- Scenario B -->
         <div class="wc-sc wc-sc-featured">
-          <div style="font-family:var(--mono);font-size:0.58rem;color:var(--green);letter-spacing:0.1em;margin-bottom:4px">✓ RECOMMENDED</div>
+          <div id="sc-b-badge" style="font-family:var(--mono);font-size:0.58rem;color:var(--green);letter-spacing:0.1em;margin-bottom:4px">✓ RECOMMENDED</div>
           <div class="wc-sc-letter">B</div>
-          <div class="wc-sc-title">Buy Used (3yr old)</div>
-          <div class="wc-sc-sub">Biggest depreciation already absorbed.</div>
+          <div class="wc-sc-title" id="sc-b-title">Buy Used (3yr old)</div>
+          <div class="wc-sc-sub" id="sc-b-sub">Biggest depreciation already absorbed.</div>
           <div class="wc-sc-row"><span class="wc-sc-row-label">Purchase Price</span><span id="sc-b-price" class="text-gold">—</span></div>
           <div class="wc-sc-row"><span class="wc-sc-row-label">Total Interest Paid</span><span id="sc-b-interest" class="text-amber">—</span></div>
           <div class="wc-sc-row"><span class="wc-sc-row-label">Running Costs (5yr)</span><span id="sc-b-running">—</span></div>
@@ -880,6 +880,11 @@ function setHorizon(years, btn) {
 function goPage(n) {
   const currentActive = document.querySelector('.page.active');
   const next = document.getElementById('page-' + n);
+  // Safety check: if page element is missing, abort navigation
+  if (!next) {
+    console.warn('Page element missing: page-' + n);
+    return;
+  }
   if (currentActive && currentActive !== next) {
     currentActive.classList.add('exit');
     currentActive.classList.remove('active');
@@ -894,8 +899,15 @@ function goPage(n) {
     else if (i + 1 < n) s.classList.add('done');
   });
   if (n === 4) calcTrueCost();
-  if (n === 5) { calcScenarios(); drawWealthCharts(); }
-  if (n === 6) buildInsights();
+  if (n === 5) {
+    calcScenarios();
+    drawWealthCharts();
+    // Ensure default panel is visible
+    switchWcTab('scenarios');
+  }
+  if (n === 6) {
+    buildInsights();
+  }
 }
 
 // ============================================================
@@ -1244,6 +1256,7 @@ function calcTrueCost() {
   document.getElementById('cb-5yr').textContent = fmt(total5yr);
   document.getElementById('cb-total').textContent = fmt(total);
   const pct = state.salary>0?(total/state.salary)*100:0;
+  state.incomePct = pct; // store for page 5 conditional framing
   document.getElementById('ig-pct').textContent = pct.toFixed(0)+'%';
   document.getElementById('ig-bar').style.width = Math.min(100,(pct/45)*100)+'%';
   // Bar gradient: solid green up to 25%, blends amber 25-30%, bleeds red above 30%
@@ -1342,6 +1355,8 @@ function calcScenarios() {
   const tc = state.trueCost;
   const isNew = car.type==='new' || car.condition==='New';
   const newPrice = car.price;
+  const pct = state.incomePct || 0;
+  const isAffordable = pct <= 30; // within healthy range
 
   const aInterest = (tc.monthly_loan*84) - (newPrice*0.9);
   const aRunning  = (tc.fuel+tc.insurance+tc.roadtax+tc.maint)*60;
@@ -1349,10 +1364,9 @@ function calcScenarios() {
   const aTotal    = newPrice*0.9 + aInterest + aRunning - aResale;
 
   // Track B: find a cheaper alternative from dataset
-  // Priority: same model (used/recond), else same make, else 65% fallback
   const trackBCar = findTrackBCar(car);
   const usedPrice = trackBCar ? trackBCar.price : Math.round(newPrice * 0.65);
-  state.trackBCar = trackBCar; // store for display
+  state.trackBCar = trackBCar;
 
   const usedLoan  = loanPayment(usedPrice*0.9, 0.045, 84);
   const bInterest = (usedLoan*84) - (usedPrice*0.9);
@@ -1366,26 +1380,54 @@ function calcScenarios() {
   const fv5         = Math.max(0, monthlyDiff) * ((Math.pow(1+r7,60)-1)/r7);
   const cOpp        = aTotal - bTotal;
 
+  // ── Conditional UX framing ──────────────────────────────────
+  // AFFORDABLE (≤30%): Open their mind — show the opportunity, don't push used cars
+  // OVER-BUDGET (>30%): Reality check — guide them toward a smarter alternative
+  if (isAffordable) {
+    // Page 5 header
+    document.getElementById('p5-title').textContent = 'Your Investment Opportunity';
+    document.getElementById('p5-desc').textContent = 'Your car choice fits comfortably within your budget. Here\'s what you could build if you channelled the price difference into investments instead.';
+    // Stat card
+    document.getElementById('wc-stat1-label').textContent = 'Monthly Investment Potential';
+    // Chart legend
+    document.getElementById('wc-legend-b').textContent = 'Alternative — If you invested the price difference at 7% p.a.';
+    // Track B card
+    document.getElementById('wc-b-label').textContent = '💡 Investment Path — What if you went cheaper?';
+    document.getElementById('wc-b-sub').textContent = '/month freed up to invest';
+    document.getElementById('wc-b-invest-label').textContent = 'Monthly investment at 7% p.a.';
+    // Scenario B — reframe as "Opportunity" not "Recommended"
+    document.getElementById('sc-b-badge').style.display = 'none'; // hide "RECOMMENDED"
+    document.getElementById('sc-b-title').textContent = trackBCar ? `${trackBCar.make} ${trackBCar.model}` : 'Cheaper Alternative';
+    document.getElementById('sc-b-sub').textContent = trackBCar
+      ? `${trackBCar.year} · ${trackBCar.condition} · ${trackBCar.engine} — Frees up RM${Math.round(Math.max(0,monthlyDiff)).toLocaleString()}/mo to invest.`
+      : 'Going 35% cheaper frees capital to invest.';
+  } else {
+    // Page 5 header — reality check mode
+    document.getElementById('p5-title').textContent = 'Affordability Reality Check';
+    document.getElementById('p5-desc').textContent = `This car is taking ${pct.toFixed(0)}% of your income. Here's what a smarter alternative looks like — and how much wealth you could build instead.`;
+    // Stat card
+    document.getElementById('wc-stat1-label').textContent = 'Monthly Saving (Cheaper Alternative)';
+    // Chart legend
+    document.getElementById('wc-legend-b').textContent = 'Track B — Smarter Alternative (savings invested at 7% p.a.)';
+    // Track B card
+    document.getElementById('wc-b-label').textContent = '✓ Smarter Alternative';
+    document.getElementById('wc-b-sub').textContent = '/month total ownership cost';
+    document.getElementById('wc-b-invest-label').textContent = 'Monthly saving invested';
+    // Scenario B — show "RECOMMENDED" badge
+    document.getElementById('sc-b-badge').style.display = 'block';
+    document.getElementById('sc-b-title').textContent = trackBCar ? `${trackBCar.make} ${trackBCar.model}` : 'Buy Used (3yr old)';
+    document.getElementById('sc-b-sub').textContent = trackBCar
+      ? `${trackBCar.year} · ${trackBCar.condition} · ${trackBCar.engine} — Biggest depreciation absorbed.`
+      : 'Biggest depreciation already absorbed.';
+  }
+
   // Scenario panel fields
   document.getElementById('sc-a-price').textContent    = fmt(newPrice);
   document.getElementById('sc-a-interest').textContent = fmt(aInterest);
   document.getElementById('sc-a-running').textContent  = fmt(aRunning);
   document.getElementById('sc-a-resale').textContent   = '+'+fmt(aResale);
   document.getElementById('sc-a-total').textContent    = fmt(aTotal);
-  // Track B label update
-  const trackBLabel = state.trackBCar
-    ? `${state.trackBCar.make} ${state.trackBCar.model} (${state.trackBCar.year}, ${state.trackBCar.condition})`
-    : 'Used/Recond (~65% of new price)';
-  const scBTitleEl = document.querySelector('.wc-sc.wc-sc-featured .wc-sc-title');
-  if (scBTitleEl) scBTitleEl.textContent = state.trackBCar
-    ? `${state.trackBCar.make} ${state.trackBCar.model}`
-    : 'Buy Used (3yr old)';
-  const scBSubEl = document.querySelector('.wc-sc.wc-sc-featured .wc-sc-sub');
-  if (scBSubEl) scBSubEl.textContent = state.trackBCar
-    ? `${state.trackBCar.year} · ${state.trackBCar.condition} · ${state.trackBCar.engine} — Biggest depreciation absorbed.`
-    : 'Biggest depreciation already absorbed.';
 
-  // Track B price
   document.getElementById('sc-b-price').textContent    = fmt(usedPrice);
   document.getElementById('sc-b-interest').textContent = fmt(bInterest);
   document.getElementById('sc-b-running').textContent  = fmt(bRunning);
@@ -1406,7 +1448,7 @@ function calcScenarios() {
   document.getElementById('bar-c-val').textContent = fmt(fv5);
 
   // Cache for chart use
-  state.scenarioData = { newPrice, usedPrice, aTotal, bTotal, fv5, monthlyDiff, usedLoan, tc };
+  state.scenarioData = { newPrice, usedPrice, aTotal, bTotal, fv5, monthlyDiff, usedLoan, tc, isAffordable };
 }
 
 // ============================================================
@@ -1544,12 +1586,16 @@ async function callGroq(messages, maxTokens=1000) {
 function buildSystemPrompt() {
   const car = state.selectedCar;
   const tc  = state.trueCost;
-  const pct = (state.salary>0&&tc) ? (tc.total/state.salary*100).toFixed(1) : 'unknown';
+  const pct = state.incomePct || (state.salary>0&&tc ? tc.total/state.salary*100 : 0);
+  const isAffordable = pct <= 30;
   const carName = car ? `${car.make||car.brand} ${car.model} (${car.year}, ${car.condition||car.type})` : 'No car selected';
   const trackBStr = state.trackBCar
-    ? `Track B alternative: ${state.trackBCar.make} ${state.trackBCar.model} (${state.trackBCar.year}, ${state.trackBCar.condition}) at RM${state.trackBCar.price.toLocaleString()}`
-    : 'Track B: estimated at 65% of selected car price';
-  return `You are TrueCost AI, a Malaysian personal finance advisor specialising in car affordability. Speak clearly and directly.\n\nUSER FINANCIAL PROFILE:\n- Salary: RM${state.salary.toLocaleString()}/month\n- Existing loans: RM${state.loans.toLocaleString()}/month\n- Living expenses: RM${state.expenses.toLocaleString()}/month\n- Savings: RM${state.savings.toLocaleString()}\n- Emergency fund: RM${state.emergency.toLocaleString()}\n- Age: ${state.age} | Dependents: ${state.dependents} | Stability: ${state.stability}\n- DTI: ${state.dti.toFixed(1)}%\n- Loan term: ${state.loanTermYears||7} years\n${car ? `\nSELECTED CAR (Track A):\n- ${carName}\n- Price: RM${car.price.toLocaleString()} | Engine: ${car.engine||car.engineCC+'cc'} | Body: ${car.bodyType}\n- True monthly cost: RM${tc?Math.round(tc.total).toLocaleString():'?'} (${pct}% of income)\n- 5-year total: RM${tc?Math.round(tc.total5yr).toLocaleString():'?'}\n- ${trackBStr}` : 'No car selected.'}\n\nMalaysian context: experts recommend 20–30% of gross income on total car costs is acceptable. A person earning RM15,000/month can comfortably handle RM2,500–3,000/month in true car costs. DTI should stay under 40%, and 6 months emergency fund is ideal. Do NOT flag a car as unaffordable if its true cost is under 25% of salary.`;
+    ? `Cheaper alternative: ${state.trackBCar.make} ${state.trackBCar.model} (${state.trackBCar.year}, ${state.trackBCar.condition}) at RM${state.trackBCar.price.toLocaleString()}`
+    : 'Cheaper alternative: estimated at 65% of selected car price';
+  const affordabilityInstruction = isAffordable
+    ? `IMPORTANT — The user's car costs only ${pct.toFixed(0)}% of their income, which is within the healthy 20–30% range. Do NOT recommend switching to a used car or push them to downgrade. Affirm their decision is financially sound. You may mention the investment opportunity as an interesting perspective (${trackBStr}), but only as "food for thought" — not as a recommendation to change their choice. Focus on long-term wealth building advice instead.`
+    : `IMPORTANT — The user's car costs ${pct.toFixed(0)}% of their income, exceeding the recommended 30% threshold. Be direct about the financial risk. Recommend considering the cheaper alternative: ${trackBStr}. Explain how the monthly savings could be invested to build wealth instead.`;
+  return `You are TrueCost AI, a Malaysian personal finance advisor specialising in car affordability. Speak clearly and directly.\n\nUSER FINANCIAL PROFILE:\n- Salary: RM${state.salary.toLocaleString()}/month\n- Existing loans: RM${state.loans.toLocaleString()}/month\n- Living expenses: RM${state.expenses.toLocaleString()}/month\n- Savings: RM${state.savings.toLocaleString()}\n- Emergency fund: RM${state.emergency.toLocaleString()}\n- Age: ${state.age} | Dependents: ${state.dependents} | Stability: ${state.stability}\n- DTI: ${state.dti.toFixed(1)}%\n- Loan term: ${state.loanTermYears||7} years\n${car ? `\nSELECTED CAR:\n- ${carName}\n- Price: RM${car.price.toLocaleString()} | Engine: ${car.engine||car.engineCC+'cc'} | Body: ${car.bodyType}\n- True monthly cost: RM${tc?Math.round(tc.total).toLocaleString():'?'} (${pct.toFixed(0)}% of income)\n- 5-year total: RM${tc?Math.round(tc.total5yr).toLocaleString():'?'}` : 'No car selected.'}\n\n${affordabilityInstruction}\n\nMalaysian context: experts recommend 20–30% of gross income on total car costs. DTI under 40%. 6 months emergency fund ideal.`;
 }
 
 // ============================================================
