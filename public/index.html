@@ -599,8 +599,8 @@
   <div class="container">
     <div class="page-header">
       <div class="page-num">Step 05 of 06</div>
-      <h1 class="page-title">Wealth Gap Analysis</h1>
-      <p class="page-desc">Two paths, one decision. See exactly how much wealth you build — or sacrifice — depending on which car you choose.</p>
+      <h1 class="page-title" id="p5-title">Wealth Gap Analysis</h1>
+       <p class="page-desc" id="p5-desc">Two paths, one decision. See exactly how much wealth you build — or sacrifice — depending on which car you choose.</p>
     </div>
 
     <!-- Summary stats -->
@@ -680,7 +680,7 @@
           <div class="wc-track-outcome" style="color:#e05252" id="wc-a-outcome">RM 0 portfolio after selected horizon</div>
         </div>
         <div class="wc-track wc-track-b">
-          <div class="wc-track-label" style="color:#4caf7d">Track B — Pre-owned (~65% of new price)</div>
+          <div class="wc-track-label" style="color:#4caf7d" id="wc-b-label">Track B — Alternative Option (~65% of price)</div>
           <div class="wc-track-emi" id="wc-b-emi" style="color:#4caf7d">RM —</div>
           <div class="wc-track-sub">/month lower total cost</div>
           <div style="font-family:var(--mono);font-size:0.65rem;color:var(--text-faint)">Monthly saving invested</div>
@@ -706,10 +706,10 @@
         </div>
         <!-- Scenario B -->
         <div class="wc-sc wc-sc-featured">
-          <div style="font-family:var(--mono);font-size:0.58rem;color:var(--green);letter-spacing:0.1em;margin-bottom:4px">✓ RECOMMENDED</div>
+          <div style="font-family:var(--mono);font-size:0.58rem;color:var(--green);letter-spacing:0.1em;margin-bottom:4px" id="sc-b-tag">✦ EXPLORE THIS</div>
           <div class="wc-sc-letter">B</div>
-          <div class="wc-sc-title">Buy Used (3yr old)</div>
-          <div class="wc-sc-sub">Biggest depreciation already absorbed.</div>
+          <div class="wc-sc-title" id="sc-b-title">Alternative Option</div>
+          <div class="wc-sc-sub" id="sc-b-sub">A lower-cost path worth knowing about.</div>
           <div class="wc-sc-row"><span class="wc-sc-row-label">Purchase Price</span><span id="sc-b-price" class="text-gold">—</span></div>
           <div class="wc-sc-row"><span class="wc-sc-row-label">Total Interest Paid</span><span id="sc-b-interest" class="text-amber">—</span></div>
           <div class="wc-sc-row"><span class="wc-sc-row-label">Running Costs (5yr)</span><span id="sc-b-running">—</span></div>
@@ -737,7 +737,7 @@
           <div class="wc-bar-track"><div class="wc-bar-fill" id="bar-a" style="width:0%;background:#e05252"><span id="bar-a-val">RM 0</span></div></div>
         </div>
         <div class="wc-bar-row">
-          <div class="wc-bar-label">Buy Used (B)</div>
+          <div class="wc-bar-label" id="bar-b-label">Alternative (B)</div>
           <div class="wc-bar-track"><div class="wc-bar-fill" id="bar-b" style="width:0%;background:#4caf7d"><span id="bar-b-val">RM 0</span></div></div>
         </div>
         <div class="wc-bar-row">
@@ -893,7 +893,7 @@ function goPage(n) {
     else if (i + 1 < n) s.classList.add('done');
   });
   if (n === 4) calcTrueCost();
-  if (n === 5) { calcScenarios(); drawWealthCharts(); }
+  if (n === 5) { calcScenarios(); drawWealthCharts(); updateP5Framing(); }
   if (n === 6) buildInsights();
 }
 
@@ -1551,6 +1551,35 @@ function appendMsg(role,text) {
 // ============================================================
 populateFilters();
 applyFilters();
+
+// Dynamic Page 5 framing based on whether car was AI-picked or over budget
+function updateP5Framing() {
+  const isAiPicked = state.selectedCar && state.aiRecoIds.includes(state.selectedCar);
+  const car = state.selectedCar ? CAR_DATASET.find(c => c.id === state.selectedCar) : null;
+  const tc = car ? calcTrueCost(car) : null;
+  const pct = tc && state.salary ? (tc.total / state.salary) * 100 : 0;
+  const isOverBudget = pct > 30;
+
+  if (isAiPicked && !isOverBudget) {
+    // Soft framing — open their mind, not convince them
+    document.getElementById('p5-title').textContent = 'Explore Your Options';
+    document.getElementById('p5-desc').textContent = 'Your chosen car fits your budget well. Here\'s what an even leaner choice could unlock — purely for your awareness.';
+    document.getElementById('wc-b-label').textContent = 'Track B — Lighter Alternative (optional)';
+    document.getElementById('sc-b-tag').textContent = '✦ CURIOUS? EXPLORE THIS';
+    document.getElementById('sc-b-title').textContent = 'Go Even Leaner';
+    document.getElementById('sc-b-sub').textContent = 'Your pick is already solid. This shows what extra savings could grow into.';
+    document.getElementById('bar-b-label').textContent = 'Leaner Option (B)';
+  } else {
+    // Stronger framing — car exceeds budget, we need to convince
+    document.getElementById('p5-title').textContent = 'Wealth Gap Analysis';
+    document.getElementById('p5-desc').textContent = 'Your selected car exceeds the recommended budget. See the financial cost of that decision — and what a smarter alternative could build for you.';
+    document.getElementById('wc-b-label').textContent = 'Track B — Pre-owned (~65% of price)';
+    document.getElementById('sc-b-tag').textContent = '✓ RECOMMENDED';
+    document.getElementById('sc-b-title').textContent = 'Buy Used (3yr old)';
+    document.getElementById('sc-b-sub').textContent = 'Biggest depreciation already absorbed.';
+    document.getElementById('bar-b-label').textContent = 'Buy Used (B)';
+  }
+}
 
 function resetFilters() {
   document.getElementById('filter-brand').value = '';
