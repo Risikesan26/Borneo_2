@@ -710,6 +710,7 @@
           <div class="wc-sc-letter">B</div>
           <div class="wc-sc-title" id="sc-b-title">Alternative Option</div>
           <div class="wc-sc-sub" id="sc-b-sub">A lower-cost path worth knowing about.</div>
+           <div id="trackb-car-card"></div>
           <div class="wc-sc-row"><span class="wc-sc-row-label">Purchase Price</span><span id="sc-b-price" class="text-gold">—</span></div>
           <div class="wc-sc-row"><span class="wc-sc-row-label">Total Interest Paid</span><span id="sc-b-interest" class="text-amber">—</span></div>
           <div class="wc-sc-row"><span class="wc-sc-row-label">Running Costs (5yr)</span><span id="sc-b-running">—</span></div>
@@ -1220,16 +1221,23 @@ document.getElementById('ig-pct').textContent = pct.toFixed(0)+'%';
 
 // Set bar width and color based on percentage
 const barEl = document.getElementById('ig-bar');
-barEl.style.width = Math.min(100,(pct/40)*100)+'%';
+// Scale: 0% income = 0% bar, 40%+ income = 100% bar
+const barWidth = Math.min(100, (pct / 40) * 100);
+barEl.style.width = barWidth + '%';
 
-// Dynamic color: 0-25% green, 25-30% amber, 30%+ red
-if (pct <= 25) {
-  barEl.style.background = 'var(--green)';
-} else if (pct <= 30) {
-  barEl.style.background = 'var(--amber)';
-} else {
-  barEl.style.background = 'var(--red)';
-}
+// Gradient that transitions: green(0-25%) → amber(25-30%) → red(30-40%)
+// Map thresholds to bar positions: 25% pct = 62.5% bar, 30% pct = 75% bar
+const g25 = (25 / 40) * 100; // 62.5% bar position = 25% income
+const g30 = (30 / 40) * 100; // 75% bar position = 30% income
+
+barEl.style.background = `linear-gradient(to right, 
+  var(--green) 0%, 
+  var(--green) ${g25}%, 
+  var(--amber) ${g25}%, 
+  var(--amber) ${g30}%, 
+  var(--red) ${g30}%, 
+  var(--red) 100%
+)`;
   const safety=document.getElementById('cb-safety'), igAdvice=document.getElementById('ig-advice');
 
 // Updated thresholds: 0-25% green, 25-30% yellow, 30%+ red
@@ -1322,7 +1330,71 @@ function findTrackBCar(selectedCar) {
   // No suitable car found - return null (will use 65% estimate)
   return null;
 }
+function renderTrackBCarCard() {
+  const car = state.trackBCar;
+  const selectedPrice = state.selectedCar ? state.selectedCar.price : 0;
+  
+  // Find or create the card container inside the Track B .wc-sc column
+  let container = document.getElementById('trackb-car-card');
+  if (!container) return; // element must exist in HTML
 
+  if (!car) {
+    container.innerHTML = `
+      <div style="padding:10px 0 4px;border-top:1px solid #1e1e1e;margin-top:8px">
+        <div style="font-family:var(--mono);font-size:0.6rem;color:var(--text-faint);letter-spacing:0.08em;margin-bottom:6px">ESTIMATED ALTERNATIVE</div>
+        <div style="font-size:0.78rem;color:var(--text-dim)">~65% of selected car price</div>
+        <div style="font-family:var(--mono);font-size:0.65rem;color:var(--text-faint);margin-top:4px">No matching used car found in dataset</div>
+      </div>`;
+    return;
+  }
+
+  const savingsPct = Math.round((1 - car.price / selectedPrice) * 100);
+  const mileageStr = car.mileage && car.mileage !== 'Not Specified' ? car.mileage : '—';
+  const condColor  = car.condition === 'Used' ? '#4caf7d' : '#4c8ecf';
+  const engineStr  = car.engine || `${car.engineCC}cc`;
+
+  container.innerHTML = `
+    <div style="margin-top:12px;padding:12px;background:#0d1a12;border:1px solid #1e3a28;border-radius:6px">
+      
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-size:0.88rem;font-weight:700;color:var(--text)">${car.make} ${car.model}</div>
+          <div style="font-family:var(--mono);font-size:0.62rem;color:var(--text-faint);margin-top:2px">${car.variant}</div>
+        </div>
+        <span style="font-family:var(--mono);font-size:0.55rem;font-weight:700;letter-spacing:0.08em;
+          padding:2px 7px;border-radius:3px;background:${condColor};color:#000;flex-shrink:0">
+          ${car.condition.toUpperCase()}
+        </span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-bottom:10px">
+        <div style="font-family:var(--mono);font-size:0.62rem;color:var(--text-faint)">📅 ${car.year}</div>
+        <div style="font-family:var(--mono);font-size:0.62rem;color:var(--text-faint)">⚙️ ${engineStr}</div>
+        <div style="font-family:var(--mono);font-size:0.62rem;color:var(--text-faint)">📍 ${mileageStr}</div>
+        <div style="font-family:var(--mono);font-size:0.62rem;color:var(--text-faint)">📌 ${car.location || '—'}</div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;
+        padding-top:8px;border-top:1px solid #1e3a28">
+        <div>
+          <div style="font-family:var(--mono);font-size:0.6rem;color:var(--text-faint)">PRICE</div>
+          <div style="font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--green)">
+            RM ${car.price.toLocaleString()}
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--mono);font-size:0.6rem;color:var(--text-faint)">YOU SAVE</div>
+          <div style="font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--gold)">
+            ${savingsPct}% cheaper
+          </div>
+        </div>
+      </div>
+
+      ${car.warranty && car.warranty !== 'No Warranty' 
+        ? `<div style="margin-top:6px;font-family:var(--mono);font-size:0.6rem;color:var(--green)">✓ ${car.warranty}</div>` 
+        : ''}
+    </div>`;
+}
 // ============================================================
 // SCENARIO DATA (feeds both panels)
 // ============================================================
@@ -1347,7 +1419,7 @@ const roadtax = engineCC <= 1000 ? 20 : engineCC <= 1300 ? 30 :
 const trackBCar = findTrackBCar(car);
 const usedPrice = trackBCar ? trackBCar.price : Math.round(newPrice * 0.65);
 state.trackBCar = trackBCar;
-
+renderTrackBCarCard(); // ← add this
 // Calculate Track B costs using actual car's engine size if available
 const trackBEngineCC = trackBCar ? (trackBCar.engine > 50 ? trackBCar.engine : trackBCar.engineCC || 1500) : (engineCC * 0.9);
 const trackBFuel = trackBEngineCC <= 1000 ? 380 : trackBEngineCC <= 1300 ? 480 : trackBEngineCC <= 1500 ? 580 : trackBEngineCC <= 2000 ? 700 : 900;
