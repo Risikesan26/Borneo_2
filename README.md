@@ -7,6 +7,13 @@ Developed for **BorNEO HackWknd**, TrueCost bridges the gap between "what you ca
 [![Demo Video](https://img.shields.io/badge/🌐_Live_Demo-Visit_Site-blue?style=for-the-badge)](https://borneo-2.vercel.app/)
 ---
 
+## 🎯 Sustainable Development Goals (SDG)
+
+* **SDG 1 (No Poverty):** Prevents debt traps caused by unaffordable vehicle commitments.
+* **SDG 8 (Decent Work & Economic Growth):** Encourages responsible financial behavior and long-term wealth building.
+* **SDG 10 (Reduced Inequalities):** Provides free access to professional-grade financial modeling tools for all income levels.
+---
+
 ## 🌟 Key Features
 
 * **The "True Cost" Engine:** Breaks down ownership into six critical pillars: Loan Installment, Fuel, Insurance, Road Tax, Maintenance, and Depreciation.
@@ -66,16 +73,30 @@ const GROQ_API_KEY = "your_api_key_here";
 3. **Run:**
 Simply open `index.html` in any modern web browser.
 
----
-
-## 🎯 Sustainable Development Goals (SDG)
-
-* **SDG 1 (No Poverty):** Prevents debt traps caused by unaffordable vehicle commitments.
-* **SDG 8 (Decent Work & Economic Growth):** Encourages responsible financial behavior and long-term wealth building.
-* **SDG 10 (Reduced Inequalities):** Provides free access to professional-grade financial modeling tools for all income levels.
 
 ---
+🧠 AI Implementation
+TrueCost integrates advanced AI to transform raw financial data into personalized coaching.
 
+1. AI Runtime Engine (Groq API)
+The application utilizes the Groq API powered by the llama-3.3-70b-versatile model. To ensure accuracy and eliminate "hallucinations," the system uses a math-first architecture:
+
+Smart Recommendation: Instead of searching the entire 919-car database via AI, the system uses a deterministic JavaScript filter to find cars within 1.5x of the user’s safe budget. This filtered list is then passed to the AI to select the top 3 best lifestyle matches.
+
+Context-Aware Advisory: The AI receives the user's specific financial profile (salary, DTI, dependents) and generates a structured verdict, risk assessment, and safer alternatives.
+
+Interactive Advisor: A rolling 8-message context window allows users to ask follow-up questions about their specific results in real-time.
+
+2. AI-Assisted Development
+The team leveraged Claude (Anthropic) during the engineering phase for:
+
+Formula Validation: Perfecting the compound interest models for the Wealth Gap analysis.
+
+SVG Engineering: Developing the custom programmatic logic for dynamic chart rendering.
+
+Prompt Engineering: Designing system instructions that adapt the AI's tone based on the user's risk level (e.g., providing more cautious advice for high-risk profiles).
+
+---
 ## 👥 Team Eliza
 
 * **Risikesan S/o Yogeswaran**
