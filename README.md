@@ -4,7 +4,7 @@
 
 Developed for **BorNEO HackWknd**, TrueCost bridges the gap between "what you can borrow" and "what you can actually afford."
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Visit_Site-blue?style=for-the-badge)](https://geohome-xidn7shbk-risikesans-projects.vercel.app/)
+[![Demo Video](https://img.shields.io/badge/🌐_Live_Demo-Visit_Site-blue?style=for-the-badge)](https://borneo-2.vercel.app/)
 ---
 
 ## 🌟 Key Features
