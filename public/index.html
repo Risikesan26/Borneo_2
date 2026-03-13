@@ -1382,7 +1382,7 @@ function renderTrackBCarCard() {
 
       ${car.warranty && car.warranty !== 'No Warranty' 
         ? `<div style="margin-top:6px;font-family:var(--mono);font-size:0.6rem;color:var(--green)">✓ ${car.warranty}</div>` 
-        : ''}
+        : `<div style="margin-top:6px;font-family:var(--mono);font-size:0.6rem;color:var(--red)">✗ No Warranty</div>`}
     </div>`;
 }
 // ============================================================
