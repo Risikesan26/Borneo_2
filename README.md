@@ -3,7 +3,7 @@
 **TrueCost** is a high-performance financial intervention tool designed to help Malaysian car buyers look beyond the monthly installment. It calculates the **actual** monthly expense of vehicle ownership—including fuel, maintenance, insurance, and depreciation—while providing AI-driven advisory to ensure long-term financial health.
 
 Developed for **BorNEO HackWknd**, TrueCost bridges the gap between "what you can borrow" and "what you can actually afford."
-
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Visit_Site-blue?style=for-the-badge)](https://geohome-xidn7shbk-risikesans-projects.vercel.app/)
 ---
 
 ## 🌟 Key Features
@@ -20,7 +20,7 @@ Developed for **BorNEO HackWknd**, TrueCost bridges the gap between "what you ca
 
 TrueCost was engineered as a zero-latency, single-page application (SPA) with no external framework dependencies.
 
-* **Frontend:** Pure HTML5, CSS3 (Custom Variables/Grid/Flexbox), and Vanilla JavaScript (ES6+).
+* **Frontend:** Pure HTML5, CSS3, and Vanilla JavaScript (ES6+).
 * **AI Inference:** Groq Cloud API using the `llama-3.3-70b-versatile` model.
 * **Data Visualization:** Custom-built SVG charting engine for programmatic line and bar charts.
 * **Typography:** Playfair Display (Serif) & IBM Plex Mono for a premium "Financial Journal" aesthetic.
@@ -55,7 +55,7 @@ git clone https://github.com/your-username/truecost.git
 
 
 2. **API Configuration:**
-Open `index.html` and locate the `GROQ_API_KEY` constant in the script section. Replace it with your API key from the Groq Console.
+Open `index.html` and locate the `GROQ_API_KEY` constant. Replace it with your API key from the Groq Console.
 ```javascript
 const GROQ_API_KEY = "your_api_key_here";
 
@@ -63,7 +63,7 @@ const GROQ_API_KEY = "your_api_key_here";
 
 
 3. **Run:**
-Simply open `index.html` in any modern web browser. No `npm install` or build steps are required.
+Simply open `index.html` in any modern web browser.
 
 ---
 
@@ -72,14 +72,6 @@ Simply open `index.html` in any modern web browser. No `npm install` or build st
 * **SDG 1 (No Poverty):** Prevents debt traps caused by unaffordable vehicle commitments.
 * **SDG 8 (Decent Work & Economic Growth):** Encourages responsible financial behavior and long-term wealth building.
 * **SDG 10 (Reduced Inequalities):** Provides free access to professional-grade financial modeling tools for all income levels.
-
----
-
-## 🔮 Future Roadmap
-
-* **Live Data Integration:** Real-time pricing from platforms like Carlist.my or Mudah.my.
-* **EPF Planning Module:** Modeling the impact of using EPF Account 2 for down payments.
-* **Vehicle Expenditure Tracker:** A mobile-friendly module to track actual monthly spending against the initial projected "True Cost."
 
 ---
 
