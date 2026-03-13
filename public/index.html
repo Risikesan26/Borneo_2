@@ -1273,21 +1273,51 @@ function renderTrackACarCard() {
   let container = document.getElementById('tracka-car-card');
   if (!container || !car) return;
 
-  const condBadgeColor = car.condition === 'New' ? '#c9a84c' : car.condition === 'Recond' ? '#4c8ecf' : '#4caf7d';
-  
+  const mileageStr = car.mileage && car.mileage !== 'Not Specified' ? car.mileage : (car.condition === 'New' ? '0 km' : '—');
+  const condColor  = car.condition === 'New' ? '#c9a84c' : car.condition === 'Recond' ? '#4c8ecf' : '#4caf7d';
+  const engineStr  = car.engine || `${car.engineCC}cc`;
+
   container.innerHTML = `
-    <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:12px;display:flex;gap:12px;align-items:center">
-      <div style="font-size:2.5rem;flex-shrink:0">${bodyEmoji(car.bodyType)}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-family:var(--sans);font-size:0.9rem;font-weight:600;margin-bottom:2px;color:var(--text)">${car.make} ${car.model}</div>
-        <div style="font-family:var(--sans);font-size:0.7rem;color:var(--text-dim);margin-bottom:4px">${car.year} · ${car.variant}</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <span style="font-family:var(--mono);font-size:0.85rem;color:var(--gold);font-weight:600">RM ${car.price.toLocaleString()}</span>
-          <span style="font-family:var(--mono);font-size:0.55rem;font-weight:700;letter-spacing:0.08em;padding:2px 6px;border-radius:3px;background:${condBadgeColor};color:#000">${car.condition.toUpperCase()}</span>
+    <div style="margin-top:12px;padding:12px;background:#1a0d0d;border:1px solid #3a1e1e;border-radius:6px">
+      
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-size:0.88rem;font-weight:700;color:var(--text)">${car.make} ${car.model}</div>
+          <div style="font-family:var(--mono);font-size:0.62rem;color:var(--text-faint);margin-top:2px">${car.variant}</div>
+        </div>
+        <span style="font-family:var(--mono);font-size:0.55rem;font-weight:700;letter-spacing:0.08em;
+          padding:2px 7px;border-radius:3px;background:${condColor};color:#000;flex-shrink:0">
+          ${car.condition.toUpperCase()}
+        </span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-bottom:10px">
+        <div style="font-family:var(--mono);font-size:0.62rem;color:var(--text-faint)">📅 ${car.year}</div>
+        <div style="font-family:var(--mono);font-size:0.62rem;color:var(--text-faint)">⚙️ ${engineStr}</div>
+        <div style="font-family:var(--mono);font-size:0.62rem;color:var(--text-faint)">📍 ${mileageStr}</div>
+        <div style="font-family:var(--mono);font-size:0.62rem;color:var(--text-faint)">📌 ${car.location || '—'}</div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;
+        padding-top:8px;border-top:1px solid #3a1e1e">
+        <div>
+          <div style="font-family:var(--mono);font-size:0.6rem;color:var(--text-faint)">PRICE</div>
+          <div style="font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--gold)">
+            RM ${car.price.toLocaleString()}
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--mono);font-size:0.6rem;color:var(--text-faint)">STATUS</div>
+          <div style="font-family:var(--mono);font-size:0.85rem;font-weight:700;color:var(--red)">
+            Selected
+          </div>
         </div>
       </div>
-    </div>
-  `;
+
+      ${car.warranty && car.warranty !== 'No Warranty' 
+        ? `<div style="margin-top:6px;font-family:var(--mono);font-size:0.6rem;color:var(--green)">✓ ${car.warranty}</div>` 
+        : ''}
+    </div>`;
 }
 
 function renderTrackBCarCard() {
